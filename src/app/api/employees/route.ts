@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
-import { employeeSchema, loginEmail } from "@/lib/model";
+import { employeeSchema } from "@/lib/model";
+import { usernameEmail } from "@/lib/usernames.mjs";
 import { z } from "zod";
 
 export const runtime = "nodejs";
@@ -46,26 +47,62 @@ function failure(e: unknown) {
     return reply({ error: "Chưa cấu hình dịch vụ quản lý nhân viên." }, 503);
   return reply({ error: "Không thể xử lý yêu cầu. Vui lòng thử lại." }, 500);
 }
+export async function GET(req: NextRequest) {
+  try {
+    const db = await authorize(req);
+    const usernames = new Map<string, string>();
+    for (let page = 1; ; page++) {
+      const { data, error } = await db.auth.admin.listUsers({
+        page,
+        perPage: 500,
+      });
+      if (error) throw error;
+      for (const user of data.users) {
+        const username = user.app_metadata.username;
+        if (typeof username === "string") usernames.set(user.id, username);
+      }
+      if (data.users.length < 500) break;
+    }
+    const profiles = [];
+    for (let offset = 0; ; offset += 500) {
+      const { data, error } = await db
+        .from("profiles")
+        .select("id,full_name,department,role")
+        .order("full_name")
+        .order("id")
+        .range(offset, offset + 499);
+      if (error) throw error;
+      profiles.push(
+        ...data.map((p) => ({ ...p, username: usernames.get(p.id) || "" })),
+      );
+      if (data.length < 500) break;
+    }
+    // Never return Auth records, emails, tokens or metadata beyond the username.
+    return reply({ employees: profiles });
+  } catch (e) {
+    return failure(e);
+  }
+}
 export async function POST(req: NextRequest) {
   try {
     const db = await authorize(req);
     const parsed = employeeSchema.safeParse(await req.json());
     if (!parsed.success)
       return reply({ error: parsed.error.issues[0].message }, 400);
-    const { full_name, department, password } = parsed.data;
+    const { full_name, username, department, password } = parsed.data;
     const { data, error } = await db.auth.admin.createUser({
-      email: await loginEmail(full_name, department, "employee"),
+      email: usernameEmail(username),
       password,
       email_confirm: true,
-      app_metadata: { full_name, department, role: "employee" },
+      app_metadata: { full_name, username, department, role: "employee" },
     });
     if (error)
       return reply(
         {
           error:
             error.code === "email_exists"
-              ? "Tên này đã tồn tại trong phòng ban. Hãy thêm tên đệm hoặc mã phân biệt."
-              : "Không tạo được nhân viên. Kiểm tra tên trùng và chính sách mật khẩu.",
+              ? "Tên đăng nhập đã được dùng. Bấm Gợi ý lại hoặc chọn tên khác."
+              : "Không tạo được nhân viên. Kiểm tra tên đăng nhập trùng và chính sách mật khẩu.",
         },
         400,
       );
@@ -84,7 +121,7 @@ export async function PATCH(req: NextRequest) {
     const parsed = schema.safeParse(await req.json());
     if (!parsed.success)
       return reply({ error: parsed.error.issues[0].message }, 400);
-    const { id, full_name, department, password } = parsed.data;
+    const { id, full_name, username, department, password } = parsed.data;
     const { data: existing } = await db
       .from("profiles")
       .select("role")
@@ -92,17 +129,29 @@ export async function PATCH(req: NextRequest) {
       .single();
     if (existing?.role !== "employee")
       return reply({ error: "Không tìm thấy nhân viên." }, 404);
+    const {
+      data: { user: target },
+      error: targetError,
+    } = await db.auth.admin.getUserById(id);
+    if (targetError || !target)
+      return reply({ error: "Không tìm thấy nhân viên." }, 404);
     const { error } = await db.auth.admin.updateUserById(id, {
-      email: await loginEmail(full_name, department, "employee"),
+      email: usernameEmail(username),
       email_confirm: true,
       ...(password ? { password } : {}),
-      app_metadata: { full_name, department, role: "employee" },
+      app_metadata: {
+        ...target.app_metadata,
+        full_name,
+        username,
+        department,
+        role: "employee",
+      },
     });
     if (error)
       return reply(
         {
           error:
-            "Không cập nhật được. Kiểm tra tên trùng trong phòng ban và mật khẩu.",
+            "Không cập nhật được. Kiểm tra tên đăng nhập trùng và mật khẩu.",
         },
         400,
       );

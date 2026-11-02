@@ -2,12 +2,14 @@ import { blankReport, Profile, Report, Role } from "./model";
 export const demoEmployee: Profile = {
   id: "demo-employee",
   full_name: "Nguyễn Minh Anh",
+  username: "anh.nguyen",
   department: "Marketing",
   role: "employee",
 };
 export const demoAdmin: Profile = {
   id: "demo-admin",
-  full_name: "Khang",
+  full_name: "Nguyễn Hoàng Nam",
+  username: "nam.nguyen",
   department: "IT",
   role: "admin",
 };

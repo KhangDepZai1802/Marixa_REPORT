@@ -1710,6 +1710,26 @@ label + .field-grid {
   max-height: 90dvh;
   box-shadow: 0 30px 100px #0f294d25;
 }
+.username-hint-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+.username-hint-row .hint {
+  font-size: 11px;
+  margin-top: 8px;
+}
+.username-hint-row .text-button {
+  font-size: 11px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.employee-username strong {
+  font-weight: 600;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
 .employee-dialog::backdrop {
   background: #0c224b65;
   backdrop-filter: blur(3px);

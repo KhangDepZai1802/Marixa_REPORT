@@ -4,7 +4,7 @@
 
 ## Luồng sử dụng
 
-1. Đăng nhập bằng vai trò, họ tên và mật khẩu; nhân viên chọn thêm phòng ban.
+1. Đăng nhập bằng vai trò, **tên đăng nhập** và mật khẩu; nhân viên chọn thêm phòng ban. Họ tên trên báo cáo tự lấy từ hồ sơ, không nhập lại ở màn đăng nhập.
 2. Tạo báo cáo **đầu ngày**: chức vụ, tối đa 3 trọng tâm, 1–20 nhiệm vụ, KPI tùy chọn, ghi chú.
 3. Lưu, sau đó bấm **Cuối ngày** hoặc **Báo cáo cuối ngày** trong lịch sử. Nhiệm vụ và mục tiêu KPI được chuyển từ bản đầu ngày.
 4. Cuối ngày nhập tiến độ % và ghi chú kết quả từng task, thêm việc phát sinh, kết quả nổi bật, KPI thực tế và bài học.
@@ -12,6 +12,10 @@
 6. Tải ảnh PNG rộng 1520 px hoặc chuẩn bị ảnh rồi bấm **Chọn ứng dụng** để chọn Zalo trong bảng chia sẻ. Nếu máy không hỗ trợ chia sẻ file, tải ảnh rồi đính kèm trong Zalo.
 
 Nhân viên xem/sửa/xóa báo cáo của mình. Admin xem mọi báo cáo, có quyền thêm/sửa/xóa **tài khoản nhân viên**, đồng thời báo cáo như nhân viên. Admin không sửa báo cáo của người khác. Mật khẩu không lưu vào bảng hồ sơ, không hiển thị lại; admin có thể đặt mật khẩu mới.
+
+Khi thêm nhân viên, nhập họ tên đầy đủ trước. Hệ thống gợi ý tên đăng nhập dạng **tên.họ** (Nguyễn Minh Anh → `anh.nguyen`), bỏ dấu và viết thường. Nếu trùng, thêm mã phòng ban (`anh.nguyen.it`, `anh.nguyen.mkt`); nếu vẫn trùng cùng phòng ban, thêm số (`anh.nguyen.it2`). Admin được sửa gợi ý. Tên đăng nhập là duy nhất toàn hệ thống và không tự thay đổi khi sửa họ tên/phòng ban.
+
+Tên đăng nhập được lưu trong Supabase Auth `app_metadata.username`; email kỹ thuật tương ứng được Auth bảo đảm duy nhất. Họ tên/phòng ban tiếp tục nằm trong `profiles`, vì vậy không cần chạy lại SQL hay thay đổi bảng để thêm chức năng này. API danh sách nhân viên chỉ trả họ tên, phòng ban, vai trò, ID và tên đăng nhập cho admin đã xác thực.
 
 Ngày/loại báo cáo được cố định sau khi lưu để giữ liên kết đầu–cuối ngày. Có thể sửa các nội dung còn lại. Muốn xóa cặp báo cáo, xóa bản cuối ngày trước rồi bản đầu ngày. Xóa nhân viên giữ lại báo cáo và thông tin tác giả tại thời điểm tạo cho admin tra cứu.
 

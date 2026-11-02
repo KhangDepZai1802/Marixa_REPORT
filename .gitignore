@@ -2,6 +2,7 @@ node_modules/
 .npm-cache/
 .browsers/
 .next/
+.next-e2e/
 .env*
 !.env.example
 tools/

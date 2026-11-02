@@ -1,5 +1,10 @@
 import { createClient } from "@supabase/supabase-js";
-import { createHash } from "node:crypto";
+import {
+  isValidUsername,
+  normalizeUsername,
+  suggestUsername,
+  usernameEmail,
+} from "../src/lib/usernames.mjs";
 import { createInterface } from "node:readline/promises";
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL,
   key =
@@ -8,9 +13,33 @@ if (!url || !key)
   throw new Error("Điền Supabase URL và secret key vào .env.local trước.");
 const rl = createInterface({ input: process.stdin, output: process.stdout });
 const name = (await rl.question("Họ tên admin: ")).trim();
-rl.close();
 if (name.length < 2 || name.length > 100)
   throw new Error("Tên cần 2–100 ký tự.");
+const db = createClient(url, key, {
+  auth: { persistSession: false, autoRefreshToken: false },
+});
+const taken = [];
+for (let page = 1; ; page++) {
+  const { data, error } = await db.auth.admin.listUsers({ page, perPage: 500 });
+  if (error) {
+    rl.close();
+    throw new Error("Không đọc được danh sách tài khoản.");
+  }
+  for (const user of data.users)
+    if (typeof user.app_metadata.username === "string")
+      taken.push(user.app_metadata.username);
+  if (data.users.length < 500) break;
+}
+const suggested = suggestUsername(name, "IT", taken);
+const username = normalizeUsername(
+  (await rl.question(`Tên đăng nhập [${suggested}]: `)) || suggested,
+);
+rl.close();
+if (!isValidUsername(username))
+  throw new Error(
+    "Tên đăng nhập cần 3–40 ký tự, chữ không dấu, số và dấu chấm/gạch nối/gạch dưới.",
+  );
+if (taken.includes(username)) throw new Error("Tên đăng nhập đã được dùng.");
 async function hiddenPassword() {
   if (!process.stdin.isTTY)
     throw new Error("Chạy trong terminal tương tác để nhập mật khẩu ẩn.");
@@ -48,22 +77,12 @@ async function hiddenPassword() {
 const password = await hiddenPassword();
 if (password.length < 6 || password.length > 128)
   throw new Error("Mật khẩu cần 6–128 ký tự.");
-const normalized = name
-  .normalize("NFC")
-  .toLocaleLowerCase("vi")
-  .replace(/\s+/g, " ");
-const email =
-  createHash("sha256")
-    .update(JSON.stringify(["admin", "", normalized]))
-    .digest("hex") + "@login.marixa.invalid";
-const db = createClient(url, key, {
-  auth: { persistSession: false, autoRefreshToken: false },
-});
+const email = usernameEmail(username);
 const { error } = await db.auth.admin.createUser({
   email,
   password,
   email_confirm: true,
-  app_metadata: { role: "admin", full_name: name, department: "IT" },
+  app_metadata: { role: "admin", full_name: name, username, department: "IT" },
 });
 if (error) throw new Error("Không tạo được admin: " + error.message);
-console.log("Đã tạo admin. Đăng nhập bằng họ tên vừa nhập.");
+console.log(`Đã tạo admin. Tên đăng nhập: ${username}`);

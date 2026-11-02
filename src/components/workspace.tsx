@@ -78,21 +78,16 @@ export default function Workspace() {
       }
       setReports(all);
       if (profile.role === "admin") {
-        const people: Profile[] = [];
-        let index = 0;
-        while (true) {
-          const { data, error } = await supabase
-            .from("profiles")
-            .select("*")
-            .order("full_name")
-            .order("id")
-            .range(index, index + 499);
-          if (error) throw error;
-          people.push(...data);
-          if (data.length < 500) break;
-          index += 500;
-        }
-        setEmployees(people);
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+        const response = await fetch("/api/employees", {
+          headers: { Authorization: `Bearer ${session?.access_token}` },
+          cache: "no-store",
+        });
+        if (!response.ok) throw new Error("Cannot load employees");
+        const result = await response.json();
+        setEmployees(result.employees);
       }
     } catch {
       setLoadError("Chưa tải được dữ liệu. Kiểm tra kết nối và thử lại.");

@@ -10,7 +10,7 @@ Mã nguồn: https://github.com/KhangDepZai1802/Marixa_REPORT
 4. Chờ project sẵn sàng. Vào **SQL Editor → New query**. Mở `supabase/migrations/001_initial.sql` trong kho GitHub, sao chép toàn bộ nội dung, bấm **Run**. Chạy một lần trên dự án mới; không chạy lại nếu các bảng đã tồn tại.
 5. Kiểm tra Table Editor có `profiles` và `reports`; cả hai đã bật RLS. Không tắt RLS.
 6. Vào **Authentication → Sign In / Providers** (hoặc mục cấu hình tương đương), **tắt Allow new users to sign up**. Chỉ admin tạo tài khoản qua API; public signup không được dùng.
-7. Ứng dụng ánh xạ tên/phòng ban sang địa chỉ định danh kỹ thuật `@login.marixa.invalid`, không phải hộp thư. Admin đổi tên hoặc phòng ban bằng `auth.admin.updateUserById`, áp dụng trực tiếp theo API quản trị; không cần thay đổi cài đặt Secure email change. Kiểm thử đổi phòng ban rồi đăng nhập bằng thông tin mới trước khi phát hành.
+7. Ứng dụng ánh xạ **tên đăng nhập** sang địa chỉ định danh kỹ thuật `@login.marixa.invalid`, không phải hộp thư. Tên đăng nhập được lưu trong Auth app_metadata và được bảo đảm duy nhất qua email kỹ thuật. Đổi họ tên/phòng ban không làm đổi tên đăng nhập. Admin cập nhật bằng `auth.admin.updateUserById`; không cần thay đổi cài đặt Secure email change.
 8. Giữ các giới hạn đăng nhập của Supabase Auth. Đặt **Minimum password length** bằng **6** trong cấu hình Email provider để khớp ứng dụng; admin cấp lại khi nhân viên quên.
 
 ## 2. Lấy khóa và cấu hình máy
@@ -41,11 +41,11 @@ Sau khi chạy SQL và điền `.env.local`:
 npm.cmd run admin:create
 ```
 
-Nhập họ tên admin, Enter; nhập mật khẩu 6–128 ký tự và Enter. Mật khẩu không hiện trên màn hình. Chạy trong terminal tương tác của máy, không qua command arguments. Script tạo Supabase Auth user và trigger tự tạo hồ sơ admin.
+Nhập họ tên admin, Enter; script gợi ý tên đăng nhập dạng `tên.họ`, bấm Enter để nhận gợi ý hoặc nhập tên khác. Tiếp theo nhập mật khẩu 6–128 ký tự và Enter. Mật khẩu không hiện trên màn hình. Chạy trong terminal tương tác của máy, không qua command arguments. Script tạo Supabase Auth user và trigger tự tạo hồ sơ admin thuộc phòng IT.
 
-Mở http://127.0.0.1:3000 → chọn **Admin** → nhập chính xác họ tên và mật khẩu vừa tạo. Không dùng email kỹ thuật để đăng nhập giao diện. Tên không phân biệt chữ hoa/thường hoặc khoảng trắng thừa, nhưng giữ phân biệt dấu tiếng Việt.
+Mở http://127.0.0.1:3000 → chọn **Admin** → nhập **tên đăng nhập** và mật khẩu vừa tạo. Không dùng họ tên hoặc email kỹ thuật ở ô đăng nhập. Tên đăng nhập không phân biệt chữ hoa/thường và bỏ khoảng trắng ở hai đầu.
 
-Vào **Nhân viên → Thêm nhân viên**: họ tên, phòng ban, mật khẩu. Nhân viên chọn vai trò Nhân viên, đúng phòng ban và tên để đăng nhập. Nếu trùng cả họ tên lẫn phòng ban, dùng tên có mã phân biệt (ví dụ `Nguyễn Văn An 02`).
+Vào **Nhân viên → Thêm nhân viên**: nhập họ tên, xem/sửa tên đăng nhập tự gợi ý, chọn phòng ban và đặt mật khẩu. Ví dụ Nguyễn Minh Anh → `anh.nguyen`; nếu trùng sẽ thêm phòng ban như `anh.nguyen.it` hoặc `anh.nguyen.mkt`, rồi thêm số nếu vẫn trùng. Họ tên đầy đủ không cần thêm mã phân biệt. Nhân viên chọn đúng phòng ban rồi nhập tên đăng nhập và mật khẩu; họ tên trên báo cáo tự điền từ hồ sơ.
 
 Đổi mật khẩu nhân viên: bấm Sửa, điền mật khẩu mới. Để trống nếu giữ nguyên. Không thể xem mật khẩu cũ. Admin không bị xóa từ màn quản lý nhân viên.
 
@@ -68,7 +68,7 @@ Vào **Nhân viên → Thêm nhân viên**: họ tên, phòng ban, mật khẩu.
 - A mở bản đầu ngày → Báo cáo cuối ngày → sửa tiến độ/ghi chú, thêm task mới, nhập KPI và lưu. Bản đầu ngày vẫn giữ nội dung cũ. Bấm lại mở bản cuối ngày đang có.
 - Sửa, tải PNG và thử báo cáo có nội dung dài. Ảnh cần hiển thị đầy đủ dấu tiếng Việt và không cắt mất nhiệm vụ.
 - Trên Android/iPhone thật: bấm Chia sẻ ảnh → Chọn ứng dụng → chọn Zalo nếu hệ điều hành hiển thị. Website không tự gửi tin, không chọn được người nhận thay bạn. Nếu Zalo không hiện, tải PNG rồi mở Zalo gửi thủ công.
-- Admin đổi tên/phòng ban/mật khẩu nhân viên, đăng xuất rồi đăng nhập với thông tin mới. Xóa nhân viên kiểm tra không đăng nhập được; báo cáo cũ vẫn còn cho admin.
+- Admin đổi họ tên/phòng ban, kiểm tra tên đăng nhập vẫn giữ nguyên và đăng nhập với đúng phòng ban mới. Thử sửa riêng tên đăng nhập; tên mới đăng nhập được, tên cũ không còn dùng được sau khi đổi. Xóa nhân viên kiểm tra không đăng nhập được; báo cáo cũ vẫn còn cho admin.
 - Mất mạng: ứng dụng báo lỗi lưu; không hiển thị đã lưu thành công. Bản đang nhập chỉ giữ trong bộ nhớ tab, chưa có tự lưu nháp; đóng/tải lại trang có thể mất nội dung chưa lưu.
 
 ## Các quyết định hiện tại

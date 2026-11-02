@@ -13,6 +13,11 @@ import {
 import Brand from "./brand";
 import { departments, loginEmail, Profile, Role } from "@/lib/model";
 import { supabase } from "@/lib/supabase";
+import {
+  isValidUsername,
+  normalizeUsername,
+  usernameEmail,
+} from "@/lib/usernames.mjs";
 export default function Login({
   onLogin,
   onDemo,
@@ -33,22 +38,38 @@ export default function Login({
     if (!supabase) return;
     setBusy(true);
     try {
-      const { data, error: err } = await supabase.auth.signInWithPassword({
-        email: await loginEmail(name, department, role),
-        password,
-      });
+      // Legacy fallback keeps existing accounts usable during the username rollout.
+      const username = normalizeUsername(name);
+      let result = isValidUsername(username)
+        ? await supabase.auth.signInWithPassword({
+            email: usernameEmail(username),
+            password,
+          })
+        : null;
+      if (!result || result.error?.code === "invalid_credentials") {
+        result = await supabase.auth.signInWithPassword({
+          email: await loginEmail(name, department, role),
+          password,
+        });
+      }
+      const { data, error: err } = result;
       if (err || !data.user)
-        throw new Error("Tên, phòng ban hoặc mật khẩu chưa đúng.");
+        throw new Error("Tên đăng nhập, phòng ban hoặc mật khẩu chưa đúng.");
       const { data: p, error: pe } = await supabase
         .from("profiles")
         .select("*")
         .eq("id", data.user.id)
         .single();
-      if (pe || !p || p.role !== role) {
+      if (
+        pe ||
+        !p ||
+        p.role !== role ||
+        (role === "employee" && p.department !== department)
+      ) {
         await supabase.auth.signOut();
         throw new Error("Tài khoản không có quyền truy cập đã chọn.");
       }
-      onLogin(p);
+      onLogin({ ...p, username: data.user.app_metadata.username });
     } catch (e) {
       setError(
         e instanceof Error
@@ -151,12 +172,14 @@ export default function Login({
               </label>
             )}
             <label>
-              Họ và tên
+              Tên đăng nhập
               <input
                 autoComplete="username"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Nhập họ tên được cấp"
+                placeholder="VD: anh.nguyen"
+                autoCapitalize="none"
+                spellCheck={false}
                 required
                 maxLength={100}
               />

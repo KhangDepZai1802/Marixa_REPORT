@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { departments, employeeSchema, Profile } from "@/lib/model";
 import { supabase } from "@/lib/supabase";
+import { normalizeUsername, suggestUsername } from "@/lib/usernames.mjs";
 
 export default function Employees({
   employees,
@@ -30,10 +31,17 @@ export default function Employees({
   const [opened, setOpened] = useState(false);
   const [name, setName] = useState("");
   const [dept, setDept] = useState<string>("IT");
+  const [usernameOverride, setUsernameOverride] = useState<string | null>(null);
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const dialog = useRef<HTMLDialogElement>(null);
+  const taken = employees
+    .filter((p) => p.id !== editing?.id)
+    .map((p) => p.username || "")
+    .filter(Boolean);
+  const suggested = suggestUsername(name, dept, taken);
+  const username = usernameOverride ?? suggested;
   useEffect(() => {
     if (opened) dialog.current?.showModal();
     else dialog.current?.close();
@@ -42,6 +50,7 @@ export default function Employees({
     setEditing(p || null);
     setName(p?.full_name || "");
     setDept(p?.department || "IT");
+    setUsernameOverride(p?.username || null);
     setPassword("");
     setError("");
     setOpened(true);
@@ -64,6 +73,7 @@ export default function Employees({
     setError("");
     const parsed = employeeSchema.safeParse({
       full_name: name,
+      username,
       department: dept,
       password: editing && !password ? "unchanged-password" : password,
     });
@@ -71,22 +81,17 @@ export default function Employees({
       setError(parsed.error.issues[0].message);
       return;
     }
+    if (taken.some((v) => normalizeUsername(v) === parsed.data.username)) {
+      setError("Tên đăng nhập đã được dùng. Bấm Gợi ý lại hoặc chọn tên khác.");
+      return;
+    }
     setBusy(true);
     try {
       if (demo) {
-        if (
-          employees.some(
-            (p) =>
-              p.id !== editing?.id &&
-              p.full_name.trim().toLocaleLowerCase("vi") ===
-                name.trim().toLocaleLowerCase("vi") &&
-              p.department === dept,
-          )
-        )
-          throw new Error("Tên này đã tồn tại trong phòng ban.");
         const p: Profile = {
           id: editing?.id || crypto.randomUUID(),
           full_name: name.trim(),
+          username: parsed.data.username,
           department: dept,
           role: "employee",
         };
@@ -99,6 +104,7 @@ export default function Employees({
         await request(editing ? "PATCH" : "POST", {
           ...(editing ? { id: editing.id } : {}),
           full_name: name,
+          username: parsed.data.username,
           department: dept,
           password,
         });
@@ -137,7 +143,7 @@ export default function Employees({
   const filtered = employees.filter(
     (p) =>
       p.role === "employee" &&
-      `${p.full_name} ${p.department}`
+      `${p.full_name} ${p.username || ""} ${p.department}`
         .toLocaleLowerCase("vi")
         .includes(search.toLocaleLowerCase("vi")),
   );
@@ -148,7 +154,7 @@ export default function Employees({
           <Search size={18} />
           <span className="sr-only">Tìm nhân viên</span>
           <input
-            placeholder="Tìm tên hoặc phòng ban…"
+            placeholder="Tìm họ tên, tên đăng nhập, phòng ban…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -174,6 +180,9 @@ export default function Employees({
             <div>
               <h3>{p.full_name}</h3>
               <p>{p.department}</p>
+              <p className="employee-username">
+                Tên đăng nhập: <strong>{p.username || "Chưa thiết lập"}</strong>
+              </p>
             </div>
             <span className="tag">Nhân viên</span>
             <div className="row-actions">
@@ -244,6 +253,41 @@ export default function Employees({
               placeholder="Nguyễn Văn An"
             />
           </label>
+          <div className="username-field">
+            <label>
+              Tên đăng nhập
+              <input
+                autoComplete="off"
+                autoCapitalize="none"
+                spellCheck={false}
+                required
+                minLength={3}
+                maxLength={40}
+                value={username}
+                onChange={(e) =>
+                  setUsernameOverride(e.target.value.toLowerCase())
+                }
+                placeholder="VD: anh.nguyen"
+                aria-describedby="username-hint"
+              />
+            </label>
+            <div className="username-hint-row">
+              <small id="username-hint" className="hint">
+                Gợi ý từ họ tên, bạn có thể sửa. Nếu trùng sẽ thêm phòng ban.
+              </small>
+              <button
+                type="button"
+                className="text-button"
+                disabled={busy || !name.trim()}
+                onClick={() => {
+                  setUsernameOverride(null);
+                  setError("");
+                }}
+              >
+                Gợi ý lại
+              </button>
+            </div>
+          </div>
           <label>
             Phòng ban
             <select
@@ -270,8 +314,8 @@ export default function Employees({
             />
           </label>
           <p className="hint">
-            Nhân viên đăng nhập bằng đúng họ tên và phòng ban này. Tên trùng
-            trong cùng phòng ban cần thêm mã phân biệt.
+            Họ tên đầy đủ hiển thị trên báo cáo. Nhân viên dùng tên đăng nhập và
+            mật khẩu để vào hệ thống, chọn đúng phòng ban đã cấp.
           </p>
           {error && (
             <p className="error" role="alert">

@@ -161,6 +161,9 @@ test("admin can create, rename and delete employees in explicitly marked demo", 
     .click();
   const dialog = page.getByRole("dialog");
   await dialog.getByLabel("Họ và tên", { exact: true }).fill("Trần Thảo");
+  await expect(dialog.getByLabel("Tên đăng nhập", { exact: true })).toHaveValue(
+    "thao.tran",
+  );
   await dialog.getByLabel("Phòng ban", { exact: true }).selectOption("Kế toán");
   await dialog
     .getByLabel("Mật khẩu", { exact: true })
@@ -171,6 +174,9 @@ test("admin can create, rename and delete employees in explicitly marked demo", 
     .getByRole("button", { name: "Sửa Trần Thảo", exact: true })
     .click();
   await dialog.getByLabel("Họ và tên", { exact: true }).fill("Trần Thu Thảo");
+  await expect(dialog.getByLabel("Tên đăng nhập", { exact: true })).toHaveValue(
+    "thao.tran",
+  );
   await dialog.getByRole("button", { name: "Lưu nhân viên" }).click();
   await expect(
     page.getByRole("heading", { name: "Trần Thu Thảo" }),

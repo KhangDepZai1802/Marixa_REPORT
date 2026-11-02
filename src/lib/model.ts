@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isValidUsername, normalizeUsername } from "./usernames.mjs";
 
 export const departments = [
   "IT",
@@ -13,6 +14,7 @@ export type Role = "admin" | "employee";
 export type Profile = {
   id: string;
   full_name: string;
+  username?: string;
   department: string;
   role: Role;
 };
@@ -152,6 +154,13 @@ export async function loginEmail(name: string, department: string, role: Role) {
     .join("")}@login.marixa.invalid`;
 }
 export const employeeSchema = z.object({
+  username: z
+    .string()
+    .transform(normalizeUsername)
+    .refine(
+      isValidUsername,
+      "Tên đăng nhập cần 3–40 ký tự, bắt đầu bằng chữ, dùng chữ không dấu, số và dấu chấm/gạch nối/gạch dưới.",
+    ),
   full_name: z.string().trim().min(2).max(100),
   department: z.enum(departments),
   password: z.string().min(6, "Mật khẩu cần ít nhất 6 ký tự.").max(128),

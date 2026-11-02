@@ -63,7 +63,7 @@ const { error } = await db.auth.admin.createUser({
   email,
   password,
   email_confirm: true,
-  app_metadata: { role: "admin", full_name: name, department: "Ban giám đốc" },
+  app_metadata: { role: "admin", full_name: name, department: "IT" },
 });
 if (error) throw new Error("Không tạo được admin: " + error.message);
 console.log("Đã tạo admin. Đăng nhập bằng họ tên vừa nhập.");

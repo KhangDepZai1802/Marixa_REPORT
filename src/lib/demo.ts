@@ -8,7 +8,7 @@ export const demoEmployee: Profile = {
 export const demoAdmin: Profile = {
   id: "demo-admin",
   full_name: "Khang",
-  department: "Ban giám đốc",
+  department: "IT",
   role: "admin",
 };
 export function demoProfile(role: Role) {

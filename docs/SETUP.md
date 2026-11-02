@@ -21,7 +21,7 @@ Trong project, tìm **Connect / Project Settings → API Keys** và URL project.
 | -------------------------------------- | ----------------------------------------------------------- | ------------------------------------ |
 | `NEXT_PUBLIC_SUPABASE_URL`             | URL project dạng `https://…supabase.co`                     | Trình duyệt + server                 |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Publishable key (`sb_publishable_…`) hoặc legacy `anon` key | Trình duyệt, bảo vệ dữ liệu bằng RLS |
-| `SUPABASE_SERVICE_ROLE_KEY`            | Legacy `service_role` key                                   | Chỉ server và script tạo admin       |
+| `SUPABASE_SECRET_KEY`                  | Secret key (`sb_secret_…`)                                  | Chỉ server và script tạo admin       |
 
 1. Trong thư mục dự án, sao chép `.env.example` thành `.env.local`:
 
@@ -29,7 +29,7 @@ Trong project, tìm **Connect / Project Settings → API Keys** và URL project.
 Copy-Item .env.example .env.local
 ```
 
-2. Điền ba giá trị vào `.env.local`. Không dán khóa bí mật vào chat, không đưa vào GitHub và không đặt tiền tố `NEXT_PUBLIC_` cho service role key.
+2. Điền ba giá trị vào `.env.local`. Không dán khóa bí mật vào chat, không đưa vào GitHub và không đặt tiền tố `NEXT_PUBLIC_` cho secret key.
 3. Chạy `npm.cmd ci` nếu chưa cài dependency.
 4. Nếu dev server đang chạy, dừng bằng Ctrl+C rồi chạy `npm.cmd run dev` để đọc cấu hình mới.
 
@@ -56,7 +56,7 @@ Vào **Nhân viên → Thêm nhân viên**: họ tên, phòng ban, mật khẩu.
 1. Đăng nhập [Vercel](https://vercel.com/new) bằng GitHub.
 2. **Add New → Project → Import Git Repository**. Chọn `KhangDepZai1802/Marixa_REPORT` (có thể cần cấp quyền cho Vercel truy cập riêng kho này).
 3. Framework preset: **Next.js**. Root Directory: để gốc. Build command: `npm run build`. Output Directory: mặc định Next.js. Node.js: **22.x**.
-4. Thêm **ba biến môi trường** đúng tên trong bảng phía trên. Không đặt service role key vào biến public. Chỉ cấu hình cho môi trường cần dùng; không đưa database thật vào preview không tin cậy.
+4. Thêm **ba biến môi trường** đúng tên trong bảng phía trên. Không đặt secret key vào biến public. Chỉ cấu hình cho môi trường cần dùng; không đưa database thật vào preview không tin cậy.
 5. Bấm **Deploy**, chờ build xong và mở URL HTTPS do Vercel cấp. Không có URL production cho tới khi thực hiện bước này.
 6. Trong Supabase **Authentication → URL Configuration**, đặt Site URL bằng URL Vercel chính thức. Ứng dụng dùng mật khẩu, không phụ thuộc email redirect, nhưng vẫn nên cấu hình đúng domain.
 7. Đăng nhập admin đã tạo. Tài khoản và dữ liệu nằm ở Supabase nên dùng chung với máy local nếu cùng project.

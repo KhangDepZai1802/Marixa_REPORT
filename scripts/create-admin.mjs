@@ -2,11 +2,10 @@ import { createClient } from "@supabase/supabase-js";
 import { createHash } from "node:crypto";
 import { createInterface } from "node:readline/promises";
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL,
-  key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  key =
+    process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
 if (!url || !key)
-  throw new Error(
-    "Điền Supabase URL và service role key vào .env.local trước.",
-  );
+  throw new Error("Điền Supabase URL và secret key vào .env.local trước.");
 const rl = createInterface({ input: process.stdin, output: process.stdout });
 const name = (await rl.question("Họ tên admin: ")).trim();
 rl.close();

@@ -52,7 +52,7 @@ npm.cmd run test:e2e
 ## Cấu trúc
 
 - `src/components/`: đăng nhập, nhập báo cáo, lịch sử, quản lý nhân viên, mẫu ảnh.
-- `src/app/api/employees/route.ts`: API admin; service role key chỉ dùng phía server.
+- `src/app/api/employees/route.ts`: API admin; secret key chỉ dùng phía server.
 - `supabase/migrations/001_initial.sql`: bảng, trigger, RLS và ràng buộc dữ liệu.
 - `scripts/create-admin.mjs`: tạo admin đầu tiên bằng terminal, mật khẩu nhập ẩn.
 - `tests/`: kiểm tra luồng nghiệp vụ, database và trình duyệt.

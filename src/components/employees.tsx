@@ -262,11 +262,11 @@ export default function Employees({
               type="password"
               autoComplete="new-password"
               required={!editing}
-              minLength={10}
+              minLength={6}
               maxLength={128}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Ít nhất 10 ký tự"
+              placeholder="Ít nhất 6 ký tự"
             />
           </label>
           <p className="hint">

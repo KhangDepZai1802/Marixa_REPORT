@@ -154,5 +154,5 @@ export async function loginEmail(name: string, department: string, role: Role) {
 export const employeeSchema = z.object({
   full_name: z.string().trim().min(2).max(100),
   department: z.enum(departments),
-  password: z.string().min(10, "Mật khẩu cần ít nhất 10 ký tự.").max(128),
+  password: z.string().min(6, "Mật khẩu cần ít nhất 6 ký tự.").max(128),
 });

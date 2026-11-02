@@ -11,7 +11,7 @@ Mã nguồn: https://github.com/KhangDepZai1802/Marixa_REPORT
 5. Kiểm tra Table Editor có `profiles` và `reports`; cả hai đã bật RLS. Không tắt RLS.
 6. Vào **Authentication → Sign In / Providers** (hoặc mục cấu hình tương đương), **tắt Allow new users to sign up**. Chỉ admin tạo tài khoản qua API; public signup không được dùng.
 7. Ứng dụng ánh xạ tên/phòng ban sang địa chỉ định danh kỹ thuật `@login.marixa.invalid`, không phải hộp thư. Admin đổi tên hoặc phòng ban bằng `auth.admin.updateUserById`, áp dụng trực tiếp theo API quản trị; không cần thay đổi cài đặt Secure email change. Kiểm thử đổi phòng ban rồi đăng nhập bằng thông tin mới trước khi phát hành.
-8. Giữ các giới hạn đăng nhập của Supabase Auth. Bật chính sách mật khẩu phù hợp, ít nhất 10 ký tự; admin cấp lại khi nhân viên quên.
+8. Giữ các giới hạn đăng nhập của Supabase Auth. Đặt **Minimum password length** bằng **6** trong cấu hình Email provider để khớp ứng dụng; admin cấp lại khi nhân viên quên.
 
 ## 2. Lấy khóa và cấu hình máy
 
@@ -41,7 +41,7 @@ Sau khi chạy SQL và điền `.env.local`:
 npm.cmd run admin:create
 ```
 
-Nhập họ tên admin, Enter; nhập mật khẩu 10–128 ký tự và Enter. Mật khẩu không hiện trên màn hình. Chạy trong terminal tương tác của máy, không qua command arguments. Script tạo Supabase Auth user và trigger tự tạo hồ sơ admin.
+Nhập họ tên admin, Enter; nhập mật khẩu 6–128 ký tự và Enter. Mật khẩu không hiện trên màn hình. Chạy trong terminal tương tác của máy, không qua command arguments. Script tạo Supabase Auth user và trigger tự tạo hồ sơ admin.
 
 Mở http://127.0.0.1:3000 → chọn **Admin** → nhập chính xác họ tên và mật khẩu vừa tạo. Không dùng email kỹ thuật để đăng nhập giao diện. Tên không phân biệt chữ hoa/thường hoặc khoảng trắng thừa, nhưng giữ phân biệt dấu tiếng Việt.
 

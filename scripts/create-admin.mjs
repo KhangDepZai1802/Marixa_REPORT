@@ -14,7 +14,7 @@ if (name.length < 2 || name.length > 100)
 async function hiddenPassword() {
   if (!process.stdin.isTTY)
     throw new Error("Chạy trong terminal tương tác để nhập mật khẩu ẩn.");
-  process.stdout.write("Mật khẩu admin (ít nhất 10 ký tự, nhập ẩn): ");
+  process.stdout.write("Mật khẩu admin (ít nhất 6 ký tự, nhập ẩn): ");
   process.stdin.setRawMode(true);
   process.stdin.resume();
   process.stdin.setEncoding("utf8");
@@ -46,8 +46,8 @@ async function hiddenPassword() {
   });
 }
 const password = await hiddenPassword();
-if (password.length < 10 || password.length > 128)
-  throw new Error("Mật khẩu cần 10–128 ký tự.");
+if (password.length < 6 || password.length > 128)
+  throw new Error("Mật khẩu cần 6–128 ký tự.");
 const normalized = name
   .normalize("NFC")
   .toLocaleLowerCase("vi")
